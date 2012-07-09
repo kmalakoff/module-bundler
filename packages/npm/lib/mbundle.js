@@ -6,7 +6,7 @@
 
   path = require('path');
 
-  mb = require('module-bundler');
+  mb = require('../module-bundler');
 
   mbundle = this.mbundle = typeof exports !== 'undefined' ? exports : {};
 

@@ -1,6 +1,6 @@
 fs = require 'fs'
 path = require 'path'
-mb = require 'module-bundler'
+mb = require '../module-bundler'
 
 mbundle = @mbundle = if (typeof(exports) != 'undefined') then exports else {}
 
