@@ -14,21 +14,21 @@ check_bundle = (test, bundle) ->
   test.ok(!!test_load_test, 'load_test was bundled from a file')
 
   # bundled from npm
-  test_wrench = bundle.require('wrench')
-  test.ok(!!test_wrench, 'wrench was bundled')
+  test_underscore = bundle.require('underscore')
+  test.ok(!!test_underscore, 'underscore was bundled')
 
   # alias
-  test_wrench = bundle.require('wrench-alias')
-  test.ok(!!test_wrench, 'wrench was aliased')
+  test_underscore = bundle.require('underscore-alias')
+  test.ok(!!test_underscore, 'underscore was aliased')
 
   # publish
-  test.ok(!!root['wrench-publish'], 'wrench was published')
+  test.ok(!!root['underscore-publish'], 'underscore was published')
 
   # loaded
   test.ok(!!root['load_test'], 'load_test was loaded')
 
 clean_bundle = ->
-  delete root['wrench-publish']
+  delete root['underscore-publish']
   delete root['_']
 
 exports.require_bundler_core =
@@ -73,11 +73,11 @@ exports.require_bundler_core =
     load_test_path = mb.resolveSafe('file://vendor/load_test.js', {cwd: SAMPLE_LIBRARY_ROOT})
     test.ok(load_test_path.replace(sample_library_dir, '') == 'vendor/load_test.js', 'should find load_test.js with file:// disabuguation')
 
-    wrench_path = mb.resolveSafe('wrench', {cwd: SAMPLE_LIBRARY_ROOT})
-    test.ok(wrench_path.replace(project_dir, '') == 'node_modules/wrench/lib/wrench.js', 'should find wrench in node_modules')
+    underscore_path = mb.resolveSafe('underscore', {cwd: SAMPLE_LIBRARY_ROOT})
+    test.ok(underscore_path.replace(project_dir, '') == 'node_modules/underscore/underscore.js', 'should find underscore in node_modules')
 
-    wrench_path = mb.resolveSafe('wrench', {cwd: SAMPLE_LIBRARY_ROOT, skip_require: true, must_exist: true})
-    test.ok(!wrench_path, 'should not find wrench since skipping require node_modules')
+    underscore_path = mb.resolveSafe('underscore', {cwd: SAMPLE_LIBRARY_ROOT, skip_require: true, must_exist: true})
+    test.ok(!underscore_path, 'should not find underscore since skipping require node_modules')
 
     test.done()
 

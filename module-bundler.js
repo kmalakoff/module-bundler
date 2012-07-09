@@ -40,7 +40,7 @@
   }
 
   mb.writeBundleSync = function(filename, config, options) {
-    var code, directory;
+    var bundle_code, directory, resolved_filename;
     if (!filename) {
       throw 'module-bundler: missing output filename or object';
     }
@@ -50,8 +50,13 @@
     if (!(options && options.cwd)) {
       throw 'module-bundler: missing options.cwd';
     }
+    bundle_code = mb.generateBundleCode(config, options);
+    if (!bundle_code) {
+      return false;
+    }
+    resolved_filename = mb.resolveSafe(filename, options);
     try {
-      directory = path.dirname(filename);
+      directory = path.dirname(resolved_filename);
       if (!path.existsSync(directory)) {
         wrench.mkdirSyncRecursive(directory, 0x1ff);
       }
@@ -60,12 +65,12 @@
         throw e;
       }
     }
-    code = "(function() {\n\n  " + (mb.generateBundleCode(config, options)) + "\n})(this);";
-    return fs.writeFileSync(filename, code, 'utf8');
+    fs.writeFileSync(resolved_filename, "(function() {\n" + bundle_code + "})(this);\n", 'utf8');
+    return true;
   };
 
   mb.writeBundlesSync = function(config, options) {
-    var bundle_config, filename, _results;
+    var bundle_config, filename, success;
     if (!config) {
       throw 'module-bundler: missing config filename or object';
     }
@@ -80,12 +85,12 @@
         return;
       }
     }
-    _results = [];
+    success = true;
     for (filename in config) {
       bundle_config = config[filename];
-      _results.push(mb.writeBundleSync(filename, bundle_config, options));
+      success &= mb.writeBundleSync(filename, bundle_config, options);
     }
-    return _results;
+    return success;
   };
 
   runInExecDir = function(fn, cwd) {
@@ -199,7 +204,7 @@
   };
 
   mb.generateLibraryCode = function() {
-    return "var root = this;\nvar root_require = require;\nvar root_require_define = require.define;\nvar root_require_resolve = require.resolve;\n\n/*\nDefine module-bundler require functions\n*/\nvar mb = (typeof(exports) !== 'undefined') ? exports : {};\nmb.modules = {};\nmb.require = function(module_name) {\n  if (!mb.modules.hasOwnProperty(module_name)) {\n    if (root_require) {\n      return root_require.apply(this, arguments);\n    }\n    throw \"Cannot find module '\" + module_name + \"'\";\n  }\n  if (!mb.modules[module_name].exports) {\n    mb.modules[module_name].exports = {};\n    mb.modules[module_name].loader.call(root, mb.modules[module_name].exports, mb.require, mb.modules[module_name]);\n  }\n  return mb.modules[module_name].exports;\n};\nmb.require_define = function(obj) {\n  for (var module_name in obj) {\n    mb.modules[module_name] = {loader: obj[module_name]};\n  };\n};\nmb.require_alias = function(alias_name, module_name) {\n  mb.modules[alias_name] = {exports: root.require(module_name)};\n};\nmb.require_resolve = function(module_name) {\n  if (!mb.modules[module_name]) {\n    if (root_require_resolve) {\n      return root_require_resolve.apply(this, arguments);\n    }\n    throw \"Cannot find module '\" + module_name + \"'\"\n  }\n  return module_name;\n};\n\n// overwrite the root implementation\nroot.require = mb.require;\nfor (var key in root_require)\n  root.require[key] = root_require[key];  // copy all additional properties\nroot.require.resolve = mb.root_require_resolve;\n";
+    return "var root = this;\nvar root_require = root.require;\nvar root_require_define = root_require ? root.require.define : null;\nvar root_require_resolve = root_require ? root.require.resolve : null;\n\n/*\nDefine module-bundler require functions\n*/\nvar mb = (typeof(exports) !== 'undefined') ? exports : {};\nmb.modules = {};\nmb.require = function(module_name) {\n  if (!mb.modules.hasOwnProperty(module_name)) {\n    if (root_require) {\n      return root_require.apply(this, arguments);\n    }\n    throw \"Cannot find module '\" + module_name + \"'\";\n  }\n  if (!mb.modules[module_name].exports) {\n    mb.modules[module_name].exports = {};\n    mb.modules[module_name].loader.call(root, mb.modules[module_name].exports, mb.require, mb.modules[module_name]);\n  }\n  return mb.modules[module_name].exports;\n};\nmb.require_define = function(obj) {\n  for (var module_name in obj) {\n    mb.modules[module_name] = {loader: obj[module_name]};\n  }\n};\nmb.require_alias = function(alias_name, module_name) {\n  mb.modules[alias_name] = {exports: root.require(module_name)};\n};\nmb.require_resolve = function(module_name) {\n  if (!mb.modules[module_name]) {\n    if (root_require_resolve) {\n      return root_require_resolve.apply(this, arguments);\n    }\n    throw \"Cannot find module '\" + module_name + \"'\"\n  }\n  return module_name;\n};\n\n// overwrite the root implementation\nroot.require = mb.require;\nif (root_require) {\n  // copy all additional properties\n  for (var key in root_require)\n    root.require[key] = root_require[key];\n}\nroot.require.resolve = mb.require_resolve;\n";
   };
 
   mb.generateAliasCode = function(entries) {
@@ -245,20 +250,26 @@
       file_contents = fs.readFileSync(pathed_file, 'utf8');
     } catch (e) {
       console.log("Couldn't bundle " + filename + ". Does it exist?");
-      throw "Couldn't bundle " + filename + ". Does it exist?";
+      return;
     }
-    return "mb.require_define({\n  '" + module_name + "': function(exports, require, module) {\n" + file_contents + "\n}\n});\n";
+    return "\nmb.require_define({'" + module_name + "': function(exports, require, module) {\n\n" + file_contents + "\n}});\n";
   };
 
   mb.generateBundleCode = function(config, options) {
-    var code, key, value;
+    var code, key, module_code, success, value;
     code = mb.generateLibraryCode();
+    success = true;
     for (key in config) {
       value = config[key];
       if (contains(RESERVED, key)) {
         continue;
       }
-      code += mb.generateModuleCode(key, value, options);
+      module_code = mb.generateModuleCode(key, value, options);
+      if (module_code) {
+        code += module_code;
+      } else {
+        success = false;
+      }
     }
     if (config.hasOwnProperty('_alias')) {
       code += mb.generateAliasCode(config._alias);
@@ -269,7 +280,11 @@
     if (config.hasOwnProperty('_load')) {
       code += mb.generateLoadCode(config._load);
     }
-    return code;
+    if (success) {
+      return code;
+    } else {
+
+    }
   };
 
 }).call(this);

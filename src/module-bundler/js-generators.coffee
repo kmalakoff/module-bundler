@@ -1,9 +1,9 @@
 mb.generateLibraryCode = ->
   return """
     var root = this;
-    var root_require = require;
-    var root_require_define = require.define;
-    var root_require_resolve = require.resolve;
+    var root_require = root.require;
+    var root_require_define = root_require ? root.require.define : null;
+    var root_require_resolve = root_require ? root.require.resolve : null;
 
     /*
     Define module-bundler require functions
@@ -26,7 +26,7 @@ mb.generateLibraryCode = ->
     mb.require_define = function(obj) {
       for (var module_name in obj) {
         mb.modules[module_name] = {loader: obj[module_name]};
-      };
+      }
     };
     mb.require_alias = function(alias_name, module_name) {
       mb.modules[alias_name] = {exports: root.require(module_name)};
@@ -43,9 +43,12 @@ mb.generateLibraryCode = ->
 
     // overwrite the root implementation
     root.require = mb.require;
-    for (var key in root_require)
-      root.require[key] = root_require[key];  // copy all additional properties
-    root.require.resolve = mb.root_require_resolve;\n
+    if (root_require) {
+      // copy all additional properties
+      for (var key in root_require)
+        root.require[key] = root_require[key];
+    }
+    root.require.resolve = mb.require_resolve;\n
   """
 
 mb.generateAliasCode = (entries) ->
@@ -75,23 +78,21 @@ mb.generateModuleCode = (module_name, filename, options) ->
     file_contents = fs.readFileSync(pathed_file, 'utf8')
   catch e
     console.log "Couldn't bundle #{filename}. Does it exist?"
-    throw "Couldn't bundle #{filename}. Does it exist?"
+    return
 
-  return """
-    mb.require_define({
-      '#{module_name}': function(exports, require, module) {\n#{file_contents}\n}
-    });\n
-    """
+  return "\nmb.require_define({'#{module_name}': function(exports, require, module) {\n\n#{file_contents}\n}});\n"
 
 mb.generateBundleCode = (config, options) ->
   code = mb.generateLibraryCode()
 
+  success = true
   for key, value of config
     continue if contains(RESERVED, key) # skip special commands
-    code += mb.generateModuleCode(key, value, options) # add the modules
+    module_code = mb.generateModuleCode(key, value, options) # add the modules
+    if module_code then (code += module_code) else (success = false)
 
   code += mb.generateAliasCode(config._alias) if config.hasOwnProperty('_alias') # create aliases
   code += mb.generatePublishCode(config._publish) if config.hasOwnProperty('_publish') # publish symbols (for example, some libraries assume dependencies can be found on window)
   code += mb.generateLoadCode(config._load) if config.hasOwnProperty('_load') # require now so they are loaded automatically when this bundle is loaded
 
-  return code
+  if success then return code else return

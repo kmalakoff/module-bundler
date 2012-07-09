@@ -1,12 +1,12 @@
 module.exports = {
-  'test/sample_library/build/bundle-javascript.js': {
+  'build/bundle-javascript.js': {
     load_test: 'vendor/load_test.js',
-    wrench: 'wrench',
+    underscore: 'underscore',
     _alias: {
-      'wrench-alias': 'wrench'
+      'underscore-alias': 'underscore'
     },
     _publish: {
-      'wrench-publish': 'wrench'
+      'underscore-publish': 'underscore'
     },
     _load: 'load_test'
   }
