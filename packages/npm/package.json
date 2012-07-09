@@ -16,5 +16,8 @@
   },
 
   "main"          : "module-bundler.js",
+  "bin":          {
+    "mbundle":     "./bin/mbundle"
+  },
   "version"       : "0.1.0"
 }
