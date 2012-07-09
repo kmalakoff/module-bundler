@@ -1,0 +1,7 @@
+{
+  "name"          : "_sample_library",
+  "devDependencies": {
+    "background": ">=0.3.0"
+  },
+  "version"       : "0.1.0"
+}
