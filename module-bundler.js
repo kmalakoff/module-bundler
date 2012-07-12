@@ -106,7 +106,7 @@
   };
 
   mb.pathNormalizeSafe = function(target, options) {
-    var cwd, normalized_target;
+    var cwd;
     if (options == null) {
       options = {};
     }
@@ -119,40 +119,30 @@
     if (cwd && (target.substr(0, cwd.length) === cwd)) {
       return target;
     }
-    normalized_target = target;
     runInExecDir((function() {
       try {
-        return normalized_target = path.normalize(target);
+        return target = path.normalize(target);
       } catch (e) {
 
       }
     }), cwd);
-    return normalized_target;
+    return target;
   };
 
   mb.requireResolveSafe = function(target, options) {
-    var cwd, resolved_target;
     if (options == null) {
       options = {};
-    }
-    if (options.cwd) {
-      cwd = path.normalize(options.cwd);
     }
     if (target.substr(0, process.env.HOME.length) === process.env.HOME) {
       return target;
     }
-    if (cwd && (target.substr(0, cwd.length) === cwd)) {
-      return target;
-    }
-    resolved_target = target;
-    runInExecDir((function() {
-      try {
-        return resolved_target = require.resolve(target);
-      } catch (e) {
+    target = target;
+    try {
+      target = require.resolve(target);
+    } catch (e) {
 
-      }
-    }), cwd);
-    return resolved_target;
+    }
+    return target;
   };
 
   mb.resolveSafe = function(target, options) {

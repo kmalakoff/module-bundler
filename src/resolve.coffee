@@ -12,22 +12,18 @@ mb.pathNormalizeSafe = (target, options={}) ->
   return target if (target.substr(0, process.env.HOME.length) is process.env.HOME)      # already resolved
   return target if cwd and (target.substr(0, cwd.length) is cwd)                        # already resolved
 
-  normalized_target = target
   runInExecDir((->
-    try (normalized_target = path.normalize(target)) catch e
+    try (target = path.normalize(target)) catch e
   ), cwd)
-  return normalized_target
+  return target
 
 mb.requireResolveSafe = (target, options={}) ->
-  cwd = path.normalize(options.cwd) if options.cwd
   return target if (target.substr(0, process.env.HOME.length) is process.env.HOME)      # already resolved
-  return target if cwd and (target.substr(0, cwd.length) is cwd)                        # already resolved
 
-  resolved_target = target
-  runInExecDir((->
-    try (resolved_target = require.resolve(target)) catch e
-  ), cwd)
-  return resolved_target
+  # always in the scope of the node process
+  target = target
+  try (target = require.resolve(target)) catch e
+  return target
 
 # options:
 #   cwd - current working directory for file system resolve
