@@ -1,7 +1,17 @@
-#!/usr/bin/env node
+#!/usr/bin/env coffee
 
-var path = require('path');
-var fs   = require('fs');
-var lib  = path.join(path.dirname(fs.realpathSync(__filename)), '../lib');
+path = require 'path'
+fs = require 'fs'
+mb = require '../module-bundler'
 
-require(lib + '/mbundle.js').run();
+# helpers
+timeLog = (message) -> console.log("#{(new Date).toLocaleTimeString()} - #{message}")
+args = process.argv.slice(2);
+
+# missing arguments, exit
+(console.error('mbundle: missing filename'); process.exit(1)) unless args.length
+
+# bundle each config file
+for arg in args
+  result = mb.writeBundlesSync(arg, {cwd: fs.realpathSync('.')})
+  timeLog(if result then "mbundle: bundled #{arg}" else "mbundle: failed to bundle #{arg}")
