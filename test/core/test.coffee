@@ -38,27 +38,29 @@ exports.require_bundler_core =
     spawned.on 'exit', (code) =>
       test.done()
 
-  'mb.writeBundleSync (CoffeeScript config file pre-loaded)': (test) ->
+  'mb.writeBundles (CoffeeScript config file pre-loaded)': (test) ->
     out_filename = path.join(SAMPLE_LIBRARY_ROOT, 'build/bundle-coffeescript.js')
     config = require(path.join(SAMPLE_LIBRARY_ROOT, 'bundle-config-test.coffee'))
-    mb.writeBundlesSync(config, {cwd: SAMPLE_LIBRARY_ROOT})
+    mb.writeBundles(config, {cwd: SAMPLE_LIBRARY_ROOT}, (success) ->
+      test.ok(success, 'successful bundling')
 
-    # check expected state and clean up after test
-    check_bundle(test, require(out_filename))
-    clean_bundle()
+      # check expected state and clean up after test
+      check_bundle(test, require(out_filename))
+      clean_bundle()
+      test.done()
+    )
 
-    test.done()
-
-  'mb.writeBundleSync (JavaScript config file by name)': (test) ->
+  'mb.writeBundles (JavaScript config file by name)': (test) ->
     out_filename = path.join(SAMPLE_LIBRARY_ROOT, 'build/bundle-javascript.js')
     filename = path.join(SAMPLE_LIBRARY_ROOT, 'bundle-config-test.js')
-    mb.writeBundlesSync(filename, {cwd: SAMPLE_LIBRARY_ROOT})
+    mb.writeBundles(filename, {cwd: SAMPLE_LIBRARY_ROOT}, (success) ->
+      test.ok(success, 'successful bundling')
 
-    # check expected state and clean up after test
-    check_bundle(test, require(out_filename))
-    clean_bundle()
-
-    test.done()
+      # check expected state and clean up after test
+      check_bundle(test, require(out_filename))
+      clean_bundle()
+      test.done()
+    )
 
   'mb.resolveSafe': (test) ->
     sample_library_dir = path.normalize(SAMPLE_LIBRARY_ROOT)

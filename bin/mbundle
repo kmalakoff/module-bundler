@@ -3,15 +3,37 @@
 path = require 'path'
 fs = require 'fs'
 mb = require '../module-bundler'
+cli = require 'commander'
 
 # helpers
 timeLog = (message) -> console.log("#{(new Date).toLocaleTimeString()} - #{message}")
-args = process.argv.slice(2);
+
+extractOptions = (env) ->
+  options = {}
+  for option_definition in env.options
+    option_key = option_definition.long.substring(2)
+    options[option_key] = env[option_key] if env.hasOwnProperty(option_key)
+
+  return options
+
+############################
+# Command Line Interface
+############################
+cli
+  .version('0.1.1')
+  .description('build packages')
+  .option('-x, --compress', 'minimize the bundles')
+  .parse(process.argv)
+
+options = extractOptions(cli)
+options.cwd = fs.realpathSync('.')
+args = cli.args
 
 # missing arguments, exit
 (console.error('mbundle: missing filename'); process.exit(1)) unless args.length
 
 # bundle each config file
-for arg in args
-  result = mb.writeBundlesSync(arg, {cwd: fs.realpathSync('.')})
-  timeLog(if result then "mbundle: bundled #{arg}" else "mbundle: failed to bundle #{arg}")
+for filename in args
+  mb.writeBundles(filename, options, (success) ->
+    timeLog(if success then "mbundle: bundled #{filename}" else "mbundle: failed to bundle #{arg}")
+  )
