@@ -1,6 +1,7 @@
 {spawn} = require 'child_process'
 fs = require 'fs'
 path = require 'path'
+existsSync = fs.existsSync || path.existsSync
 wrench = require 'wrench'
 coffeescript = require 'coffee-script'
 jsp = require("uglify-js").parser
@@ -37,7 +38,7 @@ mb.writeBundle = (filename, config, options, callback) ->
 
   # install then bundle
   dir = path.dirname(filename)
-  if not options.skip_install and (dir != options.cwd) and path.exists(path.join(dir, 'package.json'))
+  if not options.skip_install and (dir != options.cwd) and existsSync(path.join(dir, 'package.json'))
     installThenWriteBundle(filename, bundle_config, options, groupCallback)
     return
 
@@ -48,7 +49,7 @@ mb.writeBundle = (filename, config, options, callback) ->
   resolved_filename = mb.resolveSafe(filename, options);
   try
     directory = path.dirname(resolved_filename)
-    wrench.mkdirSyncRecursive(directory, 0o0777) unless path.existsSync(directory)
+    wrench.mkdirSyncRecursive(directory, 0o0777) unless existsSync(directory)
   catch e
     throw e if e.code isnt 'EEXIST'
 
@@ -89,7 +90,7 @@ mb.writeBundles = (config, options, callback) ->
 
     # install then bundle
     dir = path.dirname(filename)
-    if not options.skip_install and (dir != options.cwd) and path.exists(path.join(dir, 'package.json')) and not installed_packages.contains(path)
+    if not options.skip_install and (dir != options.cwd) and existsSync(path.join(dir, 'package.json')) and not installed_packages.contains(path)
       installed_packages.push(path)
       installThenWriteBundle(filename, bundle_config, options, groupCallback)
 

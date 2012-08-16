@@ -52,5 +52,5 @@ mb.resolveSafe = (target, options={}) ->
     raw_target = target
 
   path_to_target = path.normalize(raw_target)
-  return '' if options.must_exist and not path.existsSync(path_to_target)
+  return '' if options.must_exist and not existsSync(path_to_target)
   return path_to_target
