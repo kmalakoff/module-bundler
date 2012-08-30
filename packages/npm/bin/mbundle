@@ -35,5 +35,5 @@ args = cli.args
 # bundle each config file
 for filename in args
   mb.writeBundles(filename, options, (success) ->
-    timeLog(if success then "mbundle: bundled #{filename}" else "mbundle: failed to bundle #{arg}")
+    timeLog(if success then "mbundle: bundled #{filename}" else "mbundle: failed to bundle #{filename}")
   )

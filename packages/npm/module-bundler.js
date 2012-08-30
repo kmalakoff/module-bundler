@@ -94,7 +94,7 @@
   };
 
   mb.writeBundle = function(filename, config, options, callback) {
-    var ast, bundle, bundle_code, dir, directory, resolved_filename;
+    var ast, bundle, bundle_code, compressed_bundle, dir, directory, resolved_filename;
     if (!filename) {
       throw 'module-bundler: missing output filename or object';
     }
@@ -133,11 +133,15 @@
       ast = jsp.parse(bundle);
       ast = pro.ast_mangle(ast);
       ast = pro.ast_squeeze(ast);
-      bundle = pro.gen_code(ast);
+      compressed_bundle = pro.gen_code(ast);
+      return fs.writeFile(resolved_filename, compressed_bundle, 'utf8', function() {
+        return callback(true);
+      });
+    } else {
+      return fs.writeFile(resolved_filename, bundle, 'utf8', function() {
+        return callback(true);
+      });
     }
-    return fs.writeFile(resolved_filename, bundle, 'utf8', function() {
-      return callback(true);
-    });
   };
 
   mb.writeBundles = function(config, options, callback) {

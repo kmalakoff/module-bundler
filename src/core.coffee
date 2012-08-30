@@ -60,12 +60,22 @@ mb.writeBundle = (filename, config, options, callback) ->
     ast = jsp.parse(bundle)
     ast = pro.ast_mangle(ast)
     ast = pro.ast_squeeze(ast)
-    bundle = pro.gen_code(ast)
+    compressed_bundle = pro.gen_code(ast)
 
-  # write the file
-  fs.writeFile(resolved_filename, bundle, 'utf8', ->
-    callback(true)
-  )
+    # write compressed
+    fs.writeFile(resolved_filename, compressed_bundle, 'utf8', -> callback(true))
+
+    # # no compress option so write both compressed and uncompressed
+    # unless options.compress
+    #   min_regex = if resolved_filename.endsWith('.min.js') then new RegExp('.min.js$') else new RegExp('-min.js$')
+    #   uncompressed_filename = resolved_filename.replace(min_regex, '.js')
+
+    #   # write uncompressed
+    #   fs.writeFile(uncompressed_filename, bundle, 'utf8', -> callback(true))
+
+  # write uncompressed
+  else
+    fs.writeFile(resolved_filename, bundle, 'utf8', -> callback(true))
 
 mb.writeBundles = (config, options, callback) ->
   throw 'module-bundler: missing config filename or object' unless config
