@@ -82,17 +82,17 @@ mb.generateModuleCode = (module_name, filename, options) ->
 
   return "\nmb.require_define({'#{module_name}': function(exports, require, module) {\n\n#{file_contents}\n}});\n"
 
-mb.generateBundleCode = (config, options) ->
+mb.generateBundleCode = (bundle, options) ->
   code = mb.generateLibraryCode()
 
   success = true
-  for key, value of config
+  for key, value of bundle
     continue if contains(RESERVED, key) # skip special commands
     module_code = mb.generateModuleCode(key, value, options) # add the modules
     if module_code then (code += module_code) else (success = false)
 
-  code += mb.generateAliasCode(config._alias) if config.hasOwnProperty('_alias') # create aliases
-  code += mb.generatePublishCode(config._publish) if config.hasOwnProperty('_publish') # publish symbols (for example, some libraries assume dependencies can be found on window)
-  code += mb.generateLoadCode(config._load) if config.hasOwnProperty('_load') # require now so they are loaded automatically when this bundle is loaded
+  code += mb.generateAliasCode(bundle._alias) if bundle.hasOwnProperty('_alias') # create aliases
+  code += mb.generatePublishCode(bundle._publish) if bundle.hasOwnProperty('_publish') # publish symbols (for example, some libraries assume dependencies can be found on window)
+  code += mb.generateLoadCode(bundle._load) if bundle.hasOwnProperty('_load') # require now so they are loaded automatically when this bundle is loaded
 
   if success then return code else return

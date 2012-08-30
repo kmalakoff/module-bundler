@@ -15,7 +15,7 @@ require.extensions['.coffee'] ?= (module, filename) ->
   content = coffeescript.compile fs.readFileSync filename, 'utf8', {filename}
   module._compile content, filename
 
-installThenWriteBundle = (filename, config, options, callback) ->
+installThenWriteBundle = (filename, bundle, options, callback) ->
   dir = path.dirname(filename)
 
   spawned = spawn 'npm', ['install'], {cwd: dir}
@@ -24,25 +24,25 @@ installThenWriteBundle = (filename, config, options, callback) ->
     callback(false)
   spawned.on 'exit', (code) =>
     callback(false) if (code)
-    options = clone(options)
-    options.skip_install = true
 
     # TODO: spawn in the package.json directory
-    mb.writeBundle(filename, bundle_config, options, callback)
+    options = clone(options)
+    options.skip_install = true
+    mb.writeBundle(filename, bundle, options, callback)
 
-mb.writeBundle = (filename, config, options, callback) ->
+mb.writeBundle = (filename, bundle, options, callback) ->
   throw 'module-bundler: missing output filename or object' unless filename
-  throw 'module-bundler: missing config object' unless config
+  throw 'module-bundler: missing bundle object' unless bundle
   throw 'module-bundler: missing options.cwd' unless (options and options.cwd)
   throw 'module-bundler: missing callback' unless callback
 
   # install then bundle
   dir = path.dirname(filename)
   if not options.skip_install and (dir != options.cwd) and existsSync(path.join(dir, 'package.json'))
-    installThenWriteBundle(filename, bundle_config, options, groupCallback)
+    installThenWriteBundle(filename, bundle, options, callback)
     return
 
-  bundle_code = mb.generateBundleCode(config, options)
+  bundle_code = mb.generateBundleCode(bundle, options)
   (callback(false); return) unless bundle_code
 
   # make the destination directory
@@ -65,14 +65,6 @@ mb.writeBundle = (filename, config, options, callback) ->
     # write compressed
     fs.writeFile(resolved_filename, compressed_bundle, 'utf8', -> callback(true))
 
-    # # no compress option so write both compressed and uncompressed
-    # unless options.compress
-    #   min_regex = if resolved_filename.endsWith('.min.js') then new RegExp('.min.js$') else new RegExp('-min.js$')
-    #   uncompressed_filename = resolved_filename.replace(min_regex, '.js')
-
-    #   # write uncompressed
-    #   fs.writeFile(uncompressed_filename, bundle, 'utf8', -> callback(true))
-
   # write uncompressed
   else
     fs.writeFile(resolved_filename, bundle, 'utf8', -> callback(true))
@@ -85,6 +77,7 @@ mb.writeBundles = (config, options, callback) ->
   # it is a filename so try to load it
   if isString(config)
     try config = require(mb.resolveSafe(config, options)) catch e then (console.log(e.message); return)
+    (console.log("mbundle: failed to load #{config} configuration file. Does it exist?"); return) if isString(config) # didn't load
 
   groupSuccess = true
   count = 1 # start at one in case zero bundles are built
@@ -95,17 +88,19 @@ mb.writeBundles = (config, options, callback) ->
 
   # npm packages
   installed_packages = []
-  for filename, bundle_config of config
+  for filename, bundle of config
     count++
+
+    (console.log("mbundle: unexpected information for #{filename}"); count--) unless isObject(bundle)
 
     # install then bundle
     dir = path.dirname(filename)
     if not options.skip_install and (dir != options.cwd) and existsSync(path.join(dir, 'package.json')) and not installed_packages.contains(path)
       installed_packages.push(path)
-      installThenWriteBundle(filename, bundle_config, options, groupCallback)
+      installThenWriteBundle(filename, bundle, options, groupCallback)
 
     else
-      mb.writeBundle(filename, bundle_config, options, groupCallback)
+      mb.writeBundle(filename, bundle, options, groupCallback)
 
   # trigger group now in case there were no files (we added 1 above for this purpose)
   groupCallback(true)
