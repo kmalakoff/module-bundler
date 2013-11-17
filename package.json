@@ -15,10 +15,10 @@
   },
   "devDependencies": {
     "nodeunit": "*",
-    "coffee-script": "*",
     "easy-bake": "*"
   },
   "dependencies": {
+    "coffee-script": "*",
     "commander": "*",
     "underscore": "*",
     "wrench": "*",
