@@ -35,6 +35,7 @@ exports.require_bundler_core =
   'TEST DEPENDENCY MISSING': (test) ->
     test.ok(not !mb)
     spawned = spawn 'npm', ['install'], {cwd: SAMPLE_LIBRARY_ROOT}
+    spawned.on 'error', (err) -> console.log "Failed to run command: npm, args: #{['install'].join(', ')}. Error: #{err.message}"
     spawned.on 'exit', (code) =>
       test.done()
 

@@ -19,6 +19,7 @@ installThenWriteBundle = (filename, bundle, options, callback) ->
   dir = path.dirname(filename)
 
   spawned = spawn 'npm', ['install'], {cwd: dir}
+  spawned.on 'error', (err) -> console.log "Failed to run command: npm, args: #{['install'].join(', ')}. Error: #{err.message}"
   spawned.stderr.on 'data', (data) ->
     process.stderr.write data.toString()
     callback(false)
