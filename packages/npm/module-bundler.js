@@ -106,13 +106,9 @@
       ast = pro.ast_mangle(ast);
       ast = pro.ast_squeeze(ast);
       compressed_bundle = pro.gen_code(ast);
-      return fs.writeFile(resolved_filename, compressed_bundle, 'utf8', function() {
-        return callback();
-      });
+      return fs.writeFile(resolved_filename, compressed_bundle, 'utf8', callback);
     } else {
-      return fs.writeFile(resolved_filename, bundle, 'utf8', function() {
-        return callback();
-      });
+      return fs.writeFile(resolved_filename, bundle, 'utf8', callback);
     }
   };
 
