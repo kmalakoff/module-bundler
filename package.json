@@ -1,7 +1,7 @@
 {
   "author"        : {"name": "Kevin Malakoff", "url": "https://github.com/kmalakoff"},
   "name"          : "_module-bundler",
-  "version"       : "0.1.2",
+  "version"       : "0.1.3",
   "main"          : "module-bundler.js",
   "description"   : "ModuleBundler combines javascript files and provides a minimal CommonJS-like loader to access them",
   "keywords"      : ["module-bundler", "require", "bundler", "easy-bake", "easybake", "browser", "client", "test"],
