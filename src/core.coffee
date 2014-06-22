@@ -64,11 +64,11 @@ mb.writeBundle = (filename, bundle, options, callback) ->
     compressed_bundle = pro.gen_code(ast)
 
     # write compressed
-    fs.writeFile(resolved_filename, compressed_bundle, 'utf8', -> callback())
+    fs.writeFile(resolved_filename, compressed_bundle, 'utf8', callback)
 
   # write uncompressed
   else
-    fs.writeFile(resolved_filename, bundle, 'utf8', -> callback())
+    fs.writeFile(resolved_filename, bundle, 'utf8', callback)
 
 mb.writeBundles = (config, options, callback) ->
   throw 'module-bundler: missing config filename or object' unless config
