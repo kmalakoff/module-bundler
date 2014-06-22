@@ -1,3 +1,5 @@
+_ = require 'underscore'
+
 mb.generateLibraryCode = ->
   return """
     var root = this;
@@ -65,13 +67,13 @@ mb.generatePublishCode = (entries) ->
 
 mb.generateLoadCode = (entries) ->
   code = "\n"
-  entries = [entries] if isString(entries)
+  entries = [entries] if _.isString(entries)
   for module_name in entries
     code += "root.require('#{module_name}');\n"
   return code
 
 mb.generateModuleCode = (module_name, filename, options) ->
-  throw "module name cannot be a reservered word: #{module_name}" if contains(RESERVED, module_name)
+  throw "module name cannot be a reservered word: #{module_name}" if module_name in RESERVED
 
   pathed_file = mb.resolveSafe(filename, options)
   try
@@ -87,7 +89,7 @@ mb.generateBundleCode = (bundle, options) ->
 
   success = true
   for key, value of bundle
-    continue if contains(RESERVED, key) # skip special commands
+    continue if key in RESERVED # skip special commands
     module_code = mb.generateModuleCode(key, value, options) # add the modules
     if module_code then (code += module_code) else (success = false)
 

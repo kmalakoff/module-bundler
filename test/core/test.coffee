@@ -36,32 +36,29 @@ exports.require_bundler_core =
     test.ok(not !mb)
     spawned = spawn 'npm', ['install'], {cwd: SAMPLE_LIBRARY_ROOT}
     spawned.on 'error', (err) -> console.log "Failed to run command: npm, args: #{['install'].join(', ')}. Error: #{err.message}"
-    spawned.on 'exit', (code) =>
-      test.done()
+    spawned.on 'exit', (code) => test.done()
 
   'mb.writeBundles (CoffeeScript config file pre-loaded)': (test) ->
     out_filename = path.join(SAMPLE_LIBRARY_ROOT, 'build/bundle-coffeescript.js')
     config = require(path.join(SAMPLE_LIBRARY_ROOT, 'bundle-config-test.coffee'))
-    mb.writeBundles(config, {cwd: SAMPLE_LIBRARY_ROOT}, (success) ->
-      test.ok(success, 'successful bundling')
+    mb.writeBundles config, {cwd: SAMPLE_LIBRARY_ROOT}, (err) ->
+      test.ok(!err, 'successful bundling')
 
       # check expected state and clean up after test
       check_bundle(test, require(out_filename))
       clean_bundle()
       test.done()
-    )
 
   'mb.writeBundles (JavaScript config file by name)': (test) ->
     out_filename = path.join(SAMPLE_LIBRARY_ROOT, 'build/bundle-javascript.js')
     filename = path.join(SAMPLE_LIBRARY_ROOT, 'bundle-config-test.js')
-    mb.writeBundles(filename, {cwd: SAMPLE_LIBRARY_ROOT}, (success) ->
-      test.ok(success, 'successful bundling')
+    mb.writeBundles filename, {cwd: SAMPLE_LIBRARY_ROOT}, (err) ->
+      test.ok(!err, 'successful bundling')
 
       # check expected state and clean up after test
       check_bundle(test, require(out_filename))
       clean_bundle()
       test.done()
-    )
 
   'mb.resolveSafe': (test) ->
     sample_library_dir = path.normalize(SAMPLE_LIBRARY_ROOT)

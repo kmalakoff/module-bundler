@@ -4,6 +4,7 @@ path = require 'path'
 fs = require 'fs'
 mb = require '../module-bundler'
 cli = require 'commander'
+Queue = require 'queue-async'
 
 # helpers
 timeLog = (message) -> console.log("#{(new Date).toLocaleTimeString()} - #{message}")
@@ -33,7 +34,9 @@ args = cli.args
 (console.error('mbundle: missing filename'); process.exit(1)) unless args.length
 
 # bundle each config file
+queue = new Queue(1)
 for filename in args
-  mb.writeBundles(filename, options, (success) ->
-    timeLog(if success then "mbundle: bundled #{filename}" else "mbundle: failed to bundle #{filename}")
-  )
+  do (filename) -> queue.defer (callback) -> mb.writeBundles filename, options, (err) ->
+    timeLog(if err then "mbundle: failed to bundle #{filename}" else "mbundle: bundled #{filename}")
+    callback(err)
+queue.await (err) -> process.exit(if err then 1 else 0)
